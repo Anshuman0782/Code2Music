@@ -1,0 +1,9 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+.lineHighlight-execution {
+  background-color: rgba(0, 200, 255, 0.3) !important;
+  border-left: 4px solid cyan !important;
+}
