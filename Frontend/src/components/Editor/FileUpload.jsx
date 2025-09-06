@@ -26,12 +26,6 @@ const FileUpload = ({ setCode, editorRef, setLanguage, setLanguageId }) => {
           json: { name: "json", id: null },
           sql: { name: "sql", id: 82 },
           sh: { name: "shell", id: 46 },
-          yaml: { name: "yaml", id: null },
-          yml: { name: "yaml", id: null },
-          swift: { name: "swift", id: 83 },
-          kt: { name: "kotlin", id: 78 },
-          m: { name: "objective-c", id: 79 },
-          cs: { name: "csharp", id: 51 },
           rb: { name: "ruby", id: 72 },
         };
 

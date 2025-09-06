@@ -1,4 +1,3 @@
-
 import React, { useRef, useState, useEffect } from "react";
 import Editor from "@monaco-editor/react";
 import { tokenizeLine } from "../../features/Tokenizer";
@@ -24,8 +23,7 @@ const CodeEditor = ({ code, setCode, executionSpeed = 600 }) => {
   const [lastResult, setLastResult] = useState(null);
   const [bgmOn, setBgmOn] = useState(true);
 
-  const [codeChanged, setCodeChanged] = useState(true); // ✅ Track if code changed
-
+  const [codeChanged, setCodeChanged] = useState(true);
   const codeRef = useRef(code);
   const currentLineRef = useRef(1);
   const cancelledRef = useRef(false);
@@ -36,32 +34,33 @@ const CodeEditor = ({ code, setCode, executionSpeed = 600 }) => {
   const THEMES = ["Lo-Fi", "EDM", "Classical"];
   const [selectedTheme, setSelectedTheme] = useState("Lo-Fi");
 
+  // Mapping of languages to Judge0 IDs
+  const languageMap = {
+    c: 50,
+    cpp: 54,
+    java: 62,
+    javascript: 63,
+    typescript: 74,
+    python: 71,
+    go: 60,
+    rust: 73,
+    php: 68,
+    sql: 82,
+    ruby: 72,
+  };
+
   const apiConfigs = [
     {
       url: "https://ce.judge0.com",
       key: null,
     },
-    // {
-    //   url: "https://judge0-ce.p.rapidapi.com",
-    //   key: "3a67aa1365msh2f618ae65f181a9p1862afjsn4ae15b69a455",
-    // },
-    // {
-    //   url: "https://judge0-ce.p.rapidapi.com",
-    //   key: "e74b089bd8msh812f56fd0beb95ep1c1e77jsnfcd1552cb6b3",
-    // },
-    // {
-    //   url: "https://judge0-ce.p.rapidapi.com",
-    //   key: "66d6ebbbb4mshefa893a16fa5d3dp13fd89jsnd2b0cd0185a0",
-    // },
   ];
 
-  // Update codeRef when code changes
   useEffect(() => {
     codeRef.current = code;
     setCodeChanged(true);
   }, [code]);
 
-  // Update music engine when theme changes
   useEffect(() => {
     setMusicTheme(selectedTheme);
     if (bgmOn) {
@@ -75,10 +74,18 @@ const CodeEditor = ({ code, setCode, executionSpeed = 600 }) => {
     monacoRef.current = monaco;
   };
 
-  // --- Start Execution ---
+  const handleLanguageChange = (e) => {
+    const lang = e.target.value;
+    setLanguage(lang);
+    if (languageMap[lang]) {
+      setLanguageId(languageMap[lang]);
+    } else {
+      setLanguageId(null);
+    }
+  };
+
   const handleStartClick = async () => {
     try {
-      // Start audio from user gesture
       const audioOk = await startAudio();
       if (!audioOk) {
         Swal.fire(
@@ -89,14 +96,12 @@ const CodeEditor = ({ code, setCode, executionSpeed = 600 }) => {
         return;
       }
 
-      // Set theme & start BGM
       setMusicTheme(selectedTheme);
       if (bgmOn) startBackgroundMusic(selectedTheme);
 
       cancelledRef.current = false;
       setIsRunning(true);
 
-      // If code unchanged → skip Judge0 call
       if (!codeChanged && lastResult) {
         runExecution();
         return;
@@ -187,6 +192,7 @@ const CodeEditor = ({ code, setCode, executionSpeed = 600 }) => {
     if (!editor || !monaco) return;
 
     const lines = (codeRef.current ?? "").split("\n");
+
     const bpm = 60000 / executionSpeed;
     Tone.Transport.bpm.value = bpm * 4;
 
@@ -206,10 +212,15 @@ const CodeEditor = ({ code, setCode, executionSpeed = 600 }) => {
         },
       ]);
 
-      let tokens = tokenizeLine(lines[currentLine - 1] || "");
-      const barDuration = executionSpeed / 1000;
-      const step = barDuration / Math.max(1, tokens.length);
-      tokens.forEach((t, i) => playTokenSound(t, i * step));
+      const tokens = tokenizeLine(lines[currentLine - 1] || "");
+      if (tokens.length > 0) {
+        const stepInterval = executionSpeed / tokens.length;
+        tokens.forEach((t, i) => {
+          setTimeout(() => {
+            if (!cancelledRef.current) playTokenSound(t);
+          }, i * stepInterval);
+        });
+      }
 
       currentLineRef.current++;
       if (currentLineRef.current > lines.length) {
@@ -218,7 +229,7 @@ const CodeEditor = ({ code, setCode, executionSpeed = 600 }) => {
           metronomePart.stop();
           Tone.Transport.stop();
           setIsRunning(false);
-        }, 500);
+        }, executionSpeed);
         return;
       }
       setTimeout(runStep, executionSpeed);
@@ -323,30 +334,17 @@ const CodeEditor = ({ code, setCode, executionSpeed = 600 }) => {
     }
   };
 
-  const languages = [
-    "c",
-    "cpp",
-    "java",
-    "javascript",
-    "typescript",
-    "python",
-    "go",
-    "rust",
-    "php",
-    "sql",
-    "shell",
-  ];
+  const languages = Object.keys(languageMap);
 
   return (
     <div className="w-full h-[70vh] md:h-[80vh] lg:h-[85vh] p-2 md:p-4 flex flex-col">
-      {/* Language Selector + Theme Selector */}
       <div className="flex justify-between items-center mb-2 gap-4">
         <div className="flex items-center gap-2">
           <label className="text-sm font-semibold">Select Language:</label>
           <select
             required
             value={language}
-            onChange={(e) => setLanguage(e.target.value)}
+            onChange={handleLanguageChange}
             className="select select-info w-full max-w-xs"
           >
             {languages.map((lang) => (
@@ -373,7 +371,6 @@ const CodeEditor = ({ code, setCode, executionSpeed = 600 }) => {
         </div>
       </div>
 
-      {/* File Upload */}
       <div className="flex justify-between items-center mb-2">
         <label className="text-sm font-semibold">Upload Your File:</label>
         <FileUpload
@@ -384,7 +381,6 @@ const CodeEditor = ({ code, setCode, executionSpeed = 600 }) => {
         />
       </div>
 
-      {/* Code Editor */}
       <div className="rounded-2xl shadow-lg border border-base-300 overflow-hidden flex-1 bg-base-200 relative">
         <Editor
           language={language}
@@ -401,14 +397,11 @@ const CodeEditor = ({ code, setCode, executionSpeed = 600 }) => {
             padding: { top: 10 },
           }}
         />
-
-        {/* Paste button */}
         <button onClick={handlePasteClick} className="absolute bottom-2 right-2">
           📋
         </button>
       </div>
 
-      {/* Buttons */}
       <div className="flex gap-4 mt-4 flex-wrap">
         <button onClick={handleStartClick} className="btn btn-outline btn-success" disabled={isRunning}>
           ▶ Start

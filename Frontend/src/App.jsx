@@ -5,6 +5,7 @@ import Home from './components/pages/Home';
 import Contact from './components/Layout/Contact';
 import About from './components/Layout/About';
 import MusictoCode from './components/Layout/MusictoCode';
+import CopyCode from './components/Editor/CopyCode';
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
         <Route path="/Contact" element={<Contact />} />
         <Route path="/About" element={<About/>} />
         <Route path="/musictocode" element={<MusictoCode/>} />
+        <Route path="/Copycode" element={<CopyCode/>} />
 
 
       </Routes>

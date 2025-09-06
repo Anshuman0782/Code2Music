@@ -58,7 +58,7 @@ const About = () => {
           Want to learn how to use this project? Watch the step-by-step tutorial video below:
         </p>
         <a
-          href="https://drive.google.com/file/d/1Kf-6YsRR-YUFRFpZGwU9DVOf0S_NtsfU/view?usp=sharing"
+          href="https://drive.google.com/file/d/1DOSD0hSZbblTJuZ4RsLGY9BxCREwvIB8/view?usp=sharing"
           target="_blank"
           rel="noopener noreferrer"
           className="btn btn-outline btn-primary gap-2"
