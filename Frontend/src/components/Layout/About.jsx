@@ -29,7 +29,7 @@ const About = () => {
           <h2 className="font-semibold text-lg mb-2">Step 1: Write / Upload Code</h2>
           <p className="text-sm leading-relaxed">
             Write your program directly in the built-in editor or upload your file. 
-            Supports multiple languages like <b>C, C++, Java, Python, JS</b>, etc.
+            Supports multiple languages like <b>C, C++, Java, Python, JS</b>, etc. And choose different theme according to your mind <b>Lo-Fi,EDM & Classical</b>
           </p>
         </div>
         <div className="card bg-base-100 shadow-xl p-6">

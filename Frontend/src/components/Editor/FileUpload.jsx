@@ -45,18 +45,15 @@ const FileUpload = ({ setCode, editorRef, setLanguage, setLanguageId }) => {
         // --- Insert into editor if available ---
         if (editorRef?.current) {
           const editor = editorRef.current;
-          const selection = editor.getSelection();
           const model = editor.getModel();
-          const range = selection || model.getFullModelRange();
 
-          editor.executeEdits("file-upload", [
-            {
-              range,
-              text,
-              forceMoveMarkers: true,
-            },
-          ]);
+          if (model) {
+            model.setValue(text); // ✅ Replace full content
+            editor.pushUndoStop(); // ✅ Reset undo stack so old file can’t come back with Ctrl+Z
+          }
+
           editor.focus();
+          setCode(text); // ✅ Sync React state
         } else {
           setCode(text);
         }
@@ -70,7 +67,7 @@ const FileUpload = ({ setCode, editorRef, setLanguage, setLanguageId }) => {
     <div className="mb-4">
       <input
         type="file"
-        accept=".c,.cpp,.java,.js,.ts,.jsx,.tsx,.py,.go,.rs,.php,sql"
+        accept=".c,.cpp,.java,.js,.ts,.jsx,.tsx,.py,.go,.rs,.php,.sql"
         onChange={handleFileChange}
         className="file-input file-input-bordered file-input-info w-full max-w-xs"
       />

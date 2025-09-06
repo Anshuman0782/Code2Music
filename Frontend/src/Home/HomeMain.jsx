@@ -11,7 +11,7 @@ function HomeMain() {
         <Footer />
       
     </div>
-  )
-}
+  );
+};
 
 export default HomeMain;
