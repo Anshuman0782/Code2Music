@@ -45,7 +45,7 @@ function Navbar() {
             <Link to="/main" className="font-medium hover:text-primary">Explore</Link>
           </li>
            <li>
-             <Link to="/Copycode" className="font-medium hover:text-primary">Copy Code</Link>
+             <Link to="/Copycode" className="font-medium hover:text-primary">Generate  Code</Link>
 
           </li>
           <li>
@@ -84,7 +84,7 @@ function Navbar() {
               <Link to="/main" className="hover:text-primary">Explore</Link>
             </li>
             <li>
-              <Link to="/Copycode" className="font-medium hover:text-primary">Copy Code</Link>
+              <Link to="/Copycode" className="font-medium hover:text-primary">Generate  Code</Link>
             </li>
             <li>
               <Link to="/musictocode" className="font-medium hover:text-primary">Music to Code</Link>

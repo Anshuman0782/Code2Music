@@ -1,183 +1,180 @@
 import React, { useState } from "react";
 import Navbar from "../Layout/Navbar";
-
-const bubbleSortExamples = {
-  C: `#include <stdio.h>
-void bubbleSort(int arr[], int n) {
-    for (int i = 0; i < n-1; i++)
-        for (int j = 0; j < n-i-1; j++)
-            if (arr[j] > arr[j+1]) {
-                int temp = arr[j];
-                arr[j] = arr[j+1];
-                arr[j+1] = temp;
-            }
-}
-int main() {
-    int arr[] = {64, 34, 25, 12, 22, 11, 90};
-    int n = sizeof(arr)/sizeof(arr[0]);
-    bubbleSort(arr, n);
-    for (int i = 0; i < n; i++)
-        printf("%d ", arr[i]);
-    return 0;
-}`,
-  CPP: `#include <iostream>
-using namespace std;
-void bubbleSort(int arr[], int n) {
-    for (int i = 0; i < n-1; i++)
-        for (int j = 0; j < n-i-1; j++)
-            if (arr[j] > arr[j+1])
-                swap(arr[j], arr[j+1]);
-}
-int main() {
-    int arr[] = {64, 34, 25, 12, 22, 11, 90};
-    int n = sizeof(arr)/sizeof(arr[0]);
-    bubbleSort(arr, n);
-    for (int i = 0; i < n; i++)
-        cout << arr[i] << " ";
-    return 0;
-}`,
-  JAVA: `public class BubbleSort {
-    static void bubbleSort(int arr[]) {
-        int n = arr.length;
-        for (int i = 0; i < n-1; i++)
-            for (int j = 0; j < n-i-1; j++)
-                if (arr[j] > arr[j+1]) {
-                    int temp = arr[j];
-                    arr[j] = arr[j+1];
-                    arr[j+1] = temp;
-                }
-    }
-    public static void main(String args[]) {
-        int arr[] = {64, 34, 25, 12, 22, 11, 90};
-        bubbleSort(arr);
-        for (int num : arr)
-            System.out.print(num + " ");
-    }
-}`,
-  JAVASCRIPT: `function bubbleSort(arr) {
-  let n = arr.length;
-  for (let i = 0; i < n-1; i++) {
-    for (let j = 0; j < n-i-1; j++) {
-      if (arr[j] > arr[j+1]) {
-        [arr[j], arr[j+1]] = [arr[j+1], arr[j]];
-      }
-    }
-  }
-  return arr;
-}
-console.log(bubbleSort([64, 34, 25, 12, 22, 11, 90]));`,
-  PYTHON: `def bubbleSort(arr):
-    n = len(arr)
-    for i in range(n-1):
-        for j in range(n-i-1):
-            if arr[j] > arr[j+1]:
-                arr[j], arr[j+1] = arr[j+1], arr[j]
-
-arr = [64, 34, 25, 12, 22, 11, 90]
-bubbleSort(arr)
-print(arr)`,
-  GO: `package main
-import "fmt"
-
-func bubbleSort(arr []int) {
-    n := len(arr)
-    for i := 0; i < n-1; i++ {
-        for j := 0; j < n-i-1; j++ {
-            if arr[j] > arr[j+1] {
-                arr[j], arr[j+1] = arr[j+1], arr[j]
-            }
-        }
-    }
-}
-
-func main() {
-    arr := []int{64, 34, 25, 12, 22, 11, 90}
-    bubbleSort(arr)
-    fmt.Println(arr)
-}`,
-  PHP: `<?php
-function bubbleSort(&$arr) {
-    $n = count($arr);
-    for ($i = 0; $i < $n-1; $i++) {
-        for ($j = 0; $j < $n-$i-1; $j++) {
-            if ($arr[$j] > $arr[$j+1]) {
-                $temp = $arr[$j];
-                $arr[$j] = $arr[$j+1];
-                $arr[$j+1] = $temp;
-            }
-        }
-    }
-}
-$arr = [64, 34, 25, 12, 22, 11, 90];
-bubbleSort($arr);
-print_r($arr);
-?>`,
-  SHELL: `arr=(64 34 25 12 22 11 90)
-n=\${#arr[@]}
-for ((i=0; i<n-1; i++)); do
-  for ((j=0; j<n-i-1; j++)); do
-    if (( \${arr[j]} > \${arr[j+1]} )); then
-      temp=\${arr[j]}
-      arr[j]=\${arr[j+1]}
-      arr[j+1]=\$temp
-    fi
-  done
-done
-echo \${arr[@]}`,
-};
+import { Copy, Loader2 } from "lucide-react";
 
 const CopyCode = () => {
   const [language, setLanguage] = useState("C");
-  const [code, setCode] = useState(bubbleSortExamples["C"]);
+  const [description, setDescription] = useState("");
+  const [code, setCode] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [copied, setCopied] = useState(false);
 
-  const handleLanguageChange = (e) => {
-    const lang = e.target.value;
-    setLanguage(lang);
-    setCode(bubbleSortExamples[lang]);
+  const languages = [
+    "C", "CPP", "JAVA", "JAVASCRIPT", "TYPESCRIPT",
+    "PYTHON", "GO", "RUST", "PHP", "SQL", "RUBY",
+  ];
+
+  const handleGenerate = async () => {
+    if (!language || !description.trim()) {
+      alert("Please enter both language and description.");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+    setCode("");
+
+    // Fallback API keys
+    const apiKeys = [
+      import.meta.env.VITE_OPENAI_API_KEY,
+      import.meta.env.VITE_OPENAI_API_KEY_BACKUP,
+    ];
+
+    let success = false;
+
+    for (let key of apiKeys) {
+      if (!key) continue;
+      try {
+        const response = await fetch("https://api.openai.com/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${key}`,
+          },
+          body: JSON.stringify({
+            model: "gpt-4o-mini",
+            messages: [
+              {
+                role: "user",
+                content: `Write only the ${language} code for the following task, without any explanation:\n${description}`,
+              },
+            ],
+            max_tokens: 300,
+            temperature: 0.7,
+          }),
+        });
+
+        if (!response.ok) {
+          console.warn(`Key failed: ${key} -> ${response.status} ${response.statusText}`);
+          continue;
+        }
+
+        const data = await response.json();
+
+        if (data.error) {
+          console.warn(`Error from API with key: ${key}`, data.error.message);
+          continue;
+        } else if (data.choices && data.choices.length > 0) {
+          const messageContent = data.choices[0].message.content.trim();
+          const extractedCode = extractCode(messageContent);
+          setCode(extractedCode);
+          success = true;
+          break;
+        }
+      } catch (err) {
+        console.error(`Error with key: ${key}`, err);
+        continue;
+      }
+    }
+
+    if (!success) {
+      setError("All API keys failed. Please check your keys or try again later.");
+    }
+
+    setLoading(false);
+  };
+
+  const extractCode = (text) => {
+    const match = text.match(/```(?:\w*\n)?([\s\S]*?)```/);
+    if (match && match[1]) {
+      return match[1].trim();
+    }
+    return text;
   };
 
   const handleCopy = () => {
     navigator.clipboard.writeText(code);
-    alert("✅ Code copied to clipboard!");
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   return (
     <>
-    <Navbar />
-    <div className="max-w-5xl mx-auto my-8 shadow-lg rounded-2xl overflow-hidden border border-gray-200">
-      {/* Header */}
-      <div className="flex justify-between items-center bg-gray-900 px-4 py-3">
-        <div className="flex items-center gap-3">
-          <label className="text-gray-200 text-sm font-semibold">
-            Language:
-          </label>
-          <select
-            value={language}
-            onChange={handleLanguageChange}
-            className="bg-gray-800 text-gray-100 px-3 py-1 rounded-md border border-gray-600 focus:ring focus:ring-blue-500 select select-info"
-          >
-            {Object.keys(bubbleSortExamples).map((lang) => (
-              <option key={lang} value={lang}>
-                {lang}
-              </option>
-            ))}
-          </select>
-        </div>
-        <button
-          onClick={handleCopy}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 text-sm rounded-md shadow-md transition"
-        >
-          Copy Code
-        </button>
-      </div>
+      <Navbar />
+      <div className="max-w-7xl mx-auto my-10 px-4">
+        <div className="bg-white shadow-2xl rounded-2xl overflow-hidden border border-gray-200">
+          {/* Header */}
+          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 text-white">
+            <h2 className="text-3xl font-extrabold">🚀 Code Generator</h2>
+            <p className="text-sm text-gray-200">
+              Generate clean code instantly — no explanations
+            </p>
+          </div>
 
-      {/* Code Area */}
-      <textarea
-        value={code}
-        readOnly
-        className="w-full h-[480px] p-4 font-mono text-sm bg-gray-950 text-green-300 border-0 outline-none resize-none leading-6 "
-      />
-    </div>
+          {/* Inputs (desktop: side by side) */}
+          <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="flex flex-col gap-4">
+              <select
+                value={language}
+                onChange={(e) => setLanguage(e.target.value)}
+                className="p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                {languages.map((lang) => (
+                  <option key={lang} value={lang}>
+                    {lang}
+                  </option>
+                ))}
+              </select>
+
+              <textarea
+                placeholder="Describe the task you want code for..."
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                className="p-3 rounded-lg border border-gray-300 h-36 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+
+              <button
+                onClick={handleGenerate}
+                disabled={loading}
+                className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white px-5 py-3 rounded-lg font-semibold transition"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="animate-spin w-5 h-5" /> Generating...
+                  </>
+                ) : (
+                  "Generate Code"
+                )}
+              </button>
+            </div>
+
+            {/* Code Output */}
+            <div className="bg-gray-900 p-6 rounded-xl shadow-inner flex flex-col">
+              <div className="flex justify-between items-center mb-3">
+                <h3 className="font-semibold text-lg">Generated Code</h3>
+                {code && (
+                  <button
+                    onClick={handleCopy}
+                    className="flex items-center gap-1 text-sm bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded-md transition"
+                  >
+                    <Copy className="w-4 h-4" />
+                    {copied ? "Copied!" : "Copy"}
+                  </button>
+                )}
+              </div>
+              {error && (
+                <div className="text-red-400 mb-3 font-medium">{error}</div>
+              )}
+              <textarea
+                value={code}
+                readOnly
+                className="w-full h-[400px] p-4 font-mono text-sm bg-gray-950 text-green-300 rounded-lg resize-none leading-6 border border-gray-700 focus:outline-none"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
     </>
   );
 };
