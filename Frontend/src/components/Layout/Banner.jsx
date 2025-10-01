@@ -30,7 +30,7 @@ function Banner() {
           <img 
             src={Image} 
             alt="Code to Music illustration" 
-            className="w-full rounded-lg shadow-lg transform transition-transform duration-1000 hover:scale-105 hover:-translate-y-2 animate-float"
+            className="w-full  transform transition-transform duration-1000 hover:scale-105 hover:-translate-y-2 animate-float"
           />
         </div>
       </section>

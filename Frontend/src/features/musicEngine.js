@@ -212,3 +212,5 @@ export function playErrorSound(lineNumber) {
     theme: currentTheme,
   });
 }
+
+
