@@ -1,13 +1,13 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import Groq from "groq-sdk";
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
   try {
-    // Check API key
-    if (!process.env.GEMINI_API_KEY) {
-      return res.status(500).json({ error: "Gemini API key missing" });
+    if (!process.env.GROQ_API_KEY) {
+      return res.status(500).json({ error: "Groq API key missing" });
     }
 
     const { language, description } = req.body;
@@ -16,11 +16,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Missing inputs" });
     }
 
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-
-    const model = genAI.getGenerativeModel({
-      model: "gemini-2.0-flash"
-    });
+    const client = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
     const prompt = `
 You are a strict code generator.
@@ -28,6 +24,8 @@ You are a strict code generator.
 Rules:
 - Only output code
 - No explanation
+- No markdown backticks
+- No comments unless necessary
 
 Task:
 ${description}
@@ -35,16 +33,28 @@ ${description}
 Language: ${language}
 `;
 
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
+    const result = await client.chat.completions.create({
+      model: "llama-3.3-70b-versatile",
+      messages: [
+        {
+          role: "system",
+          content: "You are a strict code generator. Only output raw code. No explanation, no markdown, no backticks."
+        },
+        {
+          role: "user",
+          content: prompt
+        }
+      ],
+      temperature: 0.2,
+      max_tokens: 2048,
+    });
 
-    const text = response.text() || "// ❌ No code generated";
+    const code = result.choices[0]?.message?.content || "// ❌ No code generated";
 
-    return res.status(200).json({ code: text });
+    return res.status(200).json({ code });
 
   } catch (error) {
-    console.error("GEMINI ERROR:", error);
-
+    console.error("GROQ ERROR:", error);
     return res.status(500).json({
       error: "Failed to generate code",
       details: error.message,
